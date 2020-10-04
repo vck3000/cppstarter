@@ -71,6 +71,8 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # for clang to include headers
 
+enable_testing()
+
 add_subdirectory(lib)\n""" + 
 ("add_subdirectory(test)\n" if gtest else "") +
 ("add_subdirectory(external/spdlog)\n" if spdlog else "") +
