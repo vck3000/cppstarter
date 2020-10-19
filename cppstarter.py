@@ -214,6 +214,7 @@ build/
 external/
 .clangd/
 compile_commands.json
+.DS_Store
 """)
 
 
