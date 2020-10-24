@@ -164,7 +164,13 @@ def writeBuildRunScript(project_name, gtest):
         f.write("""#!/bin/bash 
 
 build() {
-  cmake -H. -Bbuild && make -C build """ + (f"&& ./bin/{project_name}_test" if gtest else "") + """
+  if [ ! -d "build" ]; then
+    echo "Creating CMake files"
+    mkdir build
+    cmake -S . -B build
+  fi
+
+  cmake --build build -j 16 && make -C build """ + (f"&& ./bin/{project_name}_test" if gtest else "") + """
   if [ $? -eq "0" ]; then
     # Link the file for clang
     if [ ! -f compile_commands.json ]; then
