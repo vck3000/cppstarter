@@ -31,6 +31,8 @@ def main():
         writeBuildRunScript(project_name, gtest)
         writeGitIgnore()
 
+        gitInit()
+
         if toGitClone:
             gitCloneDependencies(spdlog, gtest)
 
@@ -211,7 +213,6 @@ def writeGitIgnore():
     with open('.gitignore', 'w') as f:
         f.write("""bin/
 build/
-external/
 .clangd/
 compile_commands.json
 .DS_Store
@@ -261,14 +262,19 @@ TEST(HelloWorld, Simple)
 
 def gitCloneDependencies(spdlog, gtest):
     if spdlog:
-        gitClone("spdlog", "https://github.com/gabime/spdlog.git")
+        gitSubmoduleAdd("spdlog", "https://github.com/gabime/spdlog.git")
 
     if gtest:
-        gitClone("googletest", "https://github.com/google/googletest.git")
+        gitSubmoduleAdd(
+            "googletest", "https://github.com/google/googletest.git")
 
+def gitInit():
+    os.system(f"git init")
 
 def gitClone(folder, path):
     os.system(f"git clone {path} external/{folder}")
 
+def gitSubmoduleAdd(folder, path):
+    os.system(f"git submodule add {path} external/{folder}")
 
 main()
