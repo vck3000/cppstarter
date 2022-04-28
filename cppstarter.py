@@ -31,7 +31,7 @@ def main():
             "Install fmt (y/n)? ").lower() == "y" else False
 
         toGitClone = True if input(
-            "Git clone external dependencies automatically (Y/n)? ").lower() != "n" else False
+            "Git clone external dependencies automatically (y/n)? ").lower() != "n" else False
 
         createFolders()
         writeCmakeListsTxt(project_name, external)
@@ -50,9 +50,9 @@ def main():
 
     elif mode.lower() == "b":
         external["spdlog"] = True if input(
-            "Install spglog (y/N)? ").lower() == "y" else False
+            "Install spglog (y/n)? ").lower() == "y" else False
         external["gtest"] = True if input(
-            "Install gtest (y/N)? ").lower() == "y" else False
+            "Install gtest (y/n)? ").lower() == "y" else False
         external["fmt"] = True if input(
             "Install fmt (y/n)? ").lower() == "y" else False
 
@@ -308,7 +308,7 @@ def gitClone(folder, path):
 
 
 def gitSubmoduleAdd(folder, path):
-    os.system(f"git submodule add {path} external/{folder}")
+    os.system(f"git submodule add --force {path} external/{folder}")
 
 
 main()
