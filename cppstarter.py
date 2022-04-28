@@ -148,7 +148,7 @@ int main()
 {
   helloWorld();\n""" +
                 ('  spdlog::info("Hello world using spdlog!");\n' if external["spdlog"] else "") +
-                ('  fmt::print("Hello world using fmt!\n");\n' if external["fmt"] else "") +
+                ('  fmt::print("Hello world using fmt!\\n");\n' if external["fmt"] else "") +
                 """
   return 0;
 }
