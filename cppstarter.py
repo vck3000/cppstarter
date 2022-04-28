@@ -49,6 +49,7 @@ def main():
             writeGTestFiles(external)
 
     elif mode.lower() == "b":
+        external = {}
         external["spdlog"] = True if input(
             "Install spglog (y/n)? ").lower() == "y" else False
         external["gtest"] = True if input(
@@ -117,8 +118,8 @@ add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES})
                 ("include_directories(../external/spdlog/)\n" if external["spdlog"] else "") +
                 ("include_directories(../external/fmt/)\n" if external["fmt"] else "") +
                 ("\ntarget_link_libraries(${CMAKE_PROJECT_NAME}_lib" +
-                    " spdlog" if external["spdlog"] else "" +
-                    " fmt::fmt-header-only" if external["fmt"] else "" +
+                    (" spdlog" if external["spdlog"] else "") +
+                    (" fmt::fmt-header-only" if external["fmt"] else "") +
                     ")\n")
                 )
 
@@ -146,8 +147,8 @@ def writeMainCpp(author, external):
 int main()
 {
   helloWorld();\n""" +
-                ('  spdlog::info("Hello, World!");\n' if external["spdlog"] else "") +
-                ('  fmt::print("Hello, World!");\n' if external["fmt"] else "") +
+                ('  spdlog::info("Hello world using spdlog!");\n' if external["spdlog"] else "") +
+                ('  fmt::print("Hello world using fmt!\n");\n' if external["fmt"] else "") +
                 """
   return 0;
 }
@@ -164,8 +165,8 @@ def writeHelloLib(author):
 
 int helloWorld()
 {
-    std::cout << "Hello, World!" << std::endl;
-    return 1;
+    std::cout << "Hello world!" << std::endl;
+    return 0;
 }
 """)
 
@@ -267,7 +268,8 @@ target_include_directories(${BINARY} PRIVATE ${CMAKE_SOURCE_DIR})
         f.write("""#include <gtest/gtest.h>
 """ + ("#include <spdlog/spdlog.h>" if external["spdlog"] else "") + """
 int main(int argc, char **argv)
-{""" + ("\n  spdlog::set_level(spdlog::level::warn);\n" if external["spdlog"] else "") + """
+{""" + ("\n  spdlog::set_level(spdlog::level::warn);\n" if external["spdlog"] else "") +
+            """
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -280,7 +282,7 @@ int main(int argc, char **argv)
 
 TEST(HelloWorld, Simple) 
 {
-  EXPECT_EQ(helloWorld(), 1);
+  EXPECT_EQ(helloWorld(), 0);
 }
 """)
 
