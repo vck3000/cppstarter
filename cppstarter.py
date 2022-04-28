@@ -114,12 +114,12 @@ set(SOURCES
 
 add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES})
 """ +
-                ("include_directories(../external/spdlog/)" if external["spdlog"] else "") +
-                ("include_directories(../external/fmt/)" if external["fmt"] else "") +
-                ("target_link_libraries(${CMAKE_PROJECT_NAME}_lib" +
+                ("include_directories(../external/spdlog/)\n" if external["spdlog"] else "") +
+                ("include_directories(../external/fmt/)\n" if external["fmt"] else "") +
+                ("\ntarget_link_libraries(${CMAKE_PROJECT_NAME}_lib" +
                     " spdlog" if external["spdlog"] else "" +
                     " fmt::fmt-header-only" if external["fmt"] else "" +
-                    ")")
+                    ")\n")
                 )
 
 
@@ -146,9 +146,9 @@ def writeMainCpp(author, external):
 int main()
 {
   helloWorld();\n""" +
-                ('  spdlog::info("Hello, World!");\n' if external["spdlog"] else "") + 
+                ('  spdlog::info("Hello, World!");\n' if external["spdlog"] else "") +
                 ('  fmt::print("Hello, World!");\n' if external["fmt"] else "") +
-"""
+                """
   return 0;
 }
 """)
