@@ -12,6 +12,7 @@ Date: 27-9-2020
 import sys
 import os
 
+
 def main():
     mode = input("New project (A) or git clone dependencies (B)? (A/B): ")
 
@@ -20,32 +21,44 @@ def main():
 
         author = input("Author: ")
         project_name = input("Project name: ")
-        spdlog = True if input("Install spglog (y/N)? ").lower() == "y" else False
-        gtest = True if input("Install gtest (y/N)? ").lower() == "y" else False
-        toGitClone = True if input("Git clone spdlog and gtest automatically (Y/n)? ").lower() != "n" else False
 
-        createFolders(spdlog, gtest)
-        writeCmakeListsTxt(project_name, spdlog, gtest)
-        writeMainCpp(author, spdlog)
+        external = {}
+        external["spdlog"] = True if input(
+            "Install spglog (y/n)? ").lower() == "y" else False
+        external["gtest"] = True if input(
+            "Install gtest (y/n)? ").lower() == "y" else False
+        external["fmt"] = True if input(
+            "Install fmt (y/n)? ").lower() == "y" else False
+
+        toGitClone = True if input(
+            "Git clone external dependencies automatically (Y/n)? ").lower() != "n" else False
+
+        createFolders()
+        writeCmakeListsTxt(project_name, external)
+        writeMainCpp(author, external)
         writeHelloLib(author)
-        writeBuildRunScript(project_name, gtest)
+        writeBuildRunScript(project_name, external)
         writeGitIgnore()
 
         gitInit()
 
         if toGitClone:
-            gitCloneDependencies(spdlog, gtest)
+            gitCloneDependencies(external)
 
-        if gtest:
-            writeGTestFiles(spdlog)
+        if external["gtest"]:
+            writeGTestFiles(external)
 
     elif mode.lower() == "b":
-        spdlog = True if input("Install spglog (y/N)? ").lower() == "y" else False
-        gtest = True if input("Install gtest (y/N)? ").lower() == "y" else False
+        external["spdlog"] = True if input(
+            "Install spglog (y/N)? ").lower() == "y" else False
+        external["gtest"] = True if input(
+            "Install gtest (y/N)? ").lower() == "y" else False
+        external["fmt"] = True if input(
+            "Install fmt (y/n)? ").lower() == "y" else False
 
-        gitCloneDependencies(spdlog, gtest)
+        gitCloneDependencies(external)
 
-    else: 
+    else:
         print("Invalid option. Stopping.")
         sys.exit()
 
@@ -54,12 +67,14 @@ def main():
 
 def confirmOverwrite():
     if os.path.exists('src'):
-        to_continue = input("src folder detected. Are you sure you want to overwrite your files? (y/N): ")
+        to_continue = input(
+            "src folder detected. Are you sure you want to overwrite your files? (y/N): ")
         if to_continue.lower() != 'y':
             print("Cancelling")
             sys.exit()
 
-def writeCmakeListsTxt(project_name, spdlog, gtest):
+
+def writeCmakeListsTxt(project_name, external):
     with open('./CMakeLists.txt', 'w') as f:
 
         f.write("""cmake_minimum_required(VERSION 3.10)
@@ -67,7 +82,7 @@ def writeCmakeListsTxt(project_name, spdlog, gtest):
 project(""" + project_name + """ VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Weffc++ -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic")
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -75,11 +90,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # for clang to include headers
 
 enable_testing()
 
-add_subdirectory(lib)\n""" + 
-("add_subdirectory(test)\n" if gtest else "") +
-("add_subdirectory(external/spdlog)\n" if spdlog else "") +
-("add_subdirectory(external/googletest)\n" if gtest else "") +
-"""
+add_subdirectory(lib)\n""" +
+                ("add_subdirectory(test)\n" if external["gtest"] else "") +
+                ("add_subdirectory(external/spdlog)\n" if external["spdlog"] else "") +
+                ("add_subdirectory(external/googletest)\n" if external["gtest"] else "") +
+                ("add_subdirectory(external/fmt)\n" if external["gtest"] else "") +
+                """
 
 add_executable(${CMAKE_PROJECT_NAME} ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
@@ -97,45 +113,46 @@ set(SOURCES
 )
 
 add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES})
-"""
-+ 
-("""
-include_directories(../external/spdlog/)
-target_link_libraries(${CMAKE_PROJECT_NAME}_lib spdlog)
-""" if spdlog else "")
-)
+""" +
+                ("include_directories(../external/spdlog/)" if external["spdlog"] else "") +
+                ("include_directories(../external/fmt/)" if external["fmt"] else "") +
+                ("target_link_libraries(${CMAKE_PROJECT_NAME}_lib" +
+                    " spdlog" if external["spdlog"] else "" +
+                    " fmt::fmt-header-only" if external["fmt"] else "" +
+                    ")")
+                )
 
 
-def createFolders(spdlog, gtest):
-    folders = ['src', 'lib']
-
-    if gtest or spdlog:
-        folders.append('external')
+def createFolders():
+    folders = ['src', 'lib', 'external']
 
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
 
-def writeMainCpp(author, spdlog):
+def writeMainCpp(author, external):
     with open('./src/main.cpp', 'w') as f:
         f.write("""/**
  * Author: """ + author + """
  */
-""" + 
-("#include <spdlog/spdlog.h>\n" if spdlog else "")
-+ """
+""" +
+                ("#include <spdlog/spdlog.h>\n" if external["spdlog"] else "") +
+                ("#include <fmt/core.h>\n" if external["fmt"] else "") +
+                """
 #include "lib/hello.h"
+
 
 int main()
 {
-  helloWorld();\n""" + 
-('  spdlog::info("Hello, World!");\n' if spdlog else "")
-+ """
+  helloWorld();\n""" +
+                ('  spdlog::info("Hello, World!");\n' if external["spdlog"] else "") + 
+                ('  fmt::print("Hello, World!");\n' if external["fmt"] else "") +
+"""
   return 0;
 }
 """)
-        
+
 
 def writeHelloLib(author):
     with open('./lib/hello.cpp', 'w') as f:
@@ -152,7 +169,6 @@ int helloWorld()
 }
 """)
 
-
     with open('./lib/hello.h', 'w') as f:
         f.write("""/**
  * Author: """ + author + """
@@ -161,7 +177,8 @@ int helloWorld()
 int helloWorld();
 """)
 
-def writeBuildRunScript(project_name, gtest):
+
+def writeBuildRunScript(project_name, external):
     with open('run.sh', 'w') as f:
         f.write("""#!/bin/bash 
 
@@ -172,7 +189,7 @@ build() {
     cmake -S . -B build
   fi
 
-  cmake --build build -j 16 && make -C build """ + (f"&& ./bin/{project_name}_test" if gtest else "") + """
+  cmake --build build -j 16 && make -C build """ + (f"&& ./bin/{project_name}_test" if external["gtest"] else "") + """
   if [ $? -eq "0" ]; then
     # Link the file for clang
     if [ ! -f compile_commands.json ]; then
@@ -215,6 +232,7 @@ fi
 
     os.system('chmod +x run.sh')
 
+
 def writeGitIgnore():
     with open('.gitignore', 'w') as f:
         f.write("""bin/
@@ -226,7 +244,7 @@ compile_commands.json
 """)
 
 
-def writeGTestFiles(spdlog):
+def writeGTestFiles(external):
     if not os.path.exists('test'):
         os.makedirs('test')
 
@@ -247,9 +265,9 @@ target_include_directories(${BINARY} PRIVATE ${CMAKE_SOURCE_DIR})
 
     with open('test/main.cpp', 'w') as f:
         f.write("""#include <gtest/gtest.h>
-"""  + ("#include <spdlog/spdlog.h>" if spdlog else "") + """
+""" + ("#include <spdlog/spdlog.h>" if external["spdlog"] else "") + """
 int main(int argc, char **argv)
-{"""  + ("\n  spdlog::set_level(spdlog::level::warn);\n" if spdlog else "") + """
+{""" + ("\n  spdlog::set_level(spdlog::level::warn);\n" if external["spdlog"] else "") + """
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -267,21 +285,30 @@ TEST(HelloWorld, Simple)
 """)
 
 
-def gitCloneDependencies(spdlog, gtest):
-    if spdlog:
-        gitSubmoduleAdd("spdlog", "https://github.com/gabime/spdlog.git")
+def gitCloneDependencies(external):
+    if external["spdlog"]:
+        gitSubmoduleAdd(
+            "spdlog", "https://github.com/gabime/spdlog.git")
 
-    if gtest:
+    if external["gtest"]:
         gitSubmoduleAdd(
             "googletest", "https://github.com/google/googletest.git")
+
+    if external["fmt"]:
+        gitSubmoduleAdd(
+            "fmt", "https://github.com/fmtlib/fmt.git")
+
 
 def gitInit():
     os.system(f"git init")
 
+
 def gitClone(folder, path):
     os.system(f"git clone {path} external/{folder}")
 
+
 def gitSubmoduleAdd(folder, path):
     os.system(f"git submodule add {path} external/{folder}")
+
 
 main()
