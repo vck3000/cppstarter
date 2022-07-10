@@ -24,14 +24,14 @@ def main():
 
         external = {}
         external["spdlog"] = True if input(
-            "Install spglog (y/n)? ").lower() == "y" else False
+            "Install spglog (y/N)? ").lower() == "y" else False
         external["gtest"] = True if input(
-            "Install gtest (y/n)? ").lower() == "y" else False
+            "Install gtest (y/N)? ").lower() == "y" else False
         external["fmt"] = True if input(
-            "Install fmt (y/n)? ").lower() == "y" else False
+            "Install fmt (y/N)? ").lower() == "y" else False
 
         toGitClone = True if input(
-            "Git clone external dependencies automatically (y/n)? ").lower() != "n" else False
+            "Git submodule download external dependencies automatically (y/N)? ").lower() == "y" else False
 
         createFolders()
         writeCmakeListsTxt(project_name, external)
@@ -51,11 +51,11 @@ def main():
     elif mode.lower() == "b":
         external = {}
         external["spdlog"] = True if input(
-            "Install spglog (y/n)? ").lower() == "y" else False
+            "Install spglog (y/N)? ").lower() == "y" else False
         external["gtest"] = True if input(
-            "Install gtest (y/n)? ").lower() == "y" else False
+            "Install gtest (y/N)? ").lower() == "y" else False
         external["fmt"] = True if input(
-            "Install fmt (y/n)? ").lower() == "y" else False
+            "Install fmt (y/N)? ").lower() == "y" else False
 
         gitCloneDependencies(external)
 
